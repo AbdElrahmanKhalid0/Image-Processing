@@ -5,56 +5,113 @@ IMAGE_FILE = 'IMAGE.jpeg'
 img = cv2.imread(IMAGE_FILE)
 new_img = np.copy(img)
 
+# the height is equal to the width
+def get_surrounding_pixels(img, height, current_pixel_row, current_pixel_index):
+    """returns the surrounding pixels of a certain pixel, including the pixel itself"""
+
+    height_half = int(height/2)
+
+    if current_pixel_row < height_half or current_pixel_index < height_half or current_pixel_index + height_half >= len(img[0]) or current_pixel_row + height_half >= len(img):
+        return None
+
+    # print(f'row: {current_pixel_row}, pixel: {current_pixel_index} => can be handeled')
+    surrounding_pixels = []
+    i = -height_half
+    for j in range(height):
+        # ----------
+        # |**|  |  |
+        # |  |**|  |
+        # |  |  |**|
+        # ----------
+        if current_pixel_row + i + j != current_pixel_row and current_pixel_index + i + j != current_pixel_index:
+            # checking that the current pixel is not the center pixel
+            surrounding_pixels.append(img[current_pixel_row + i + j][current_pixel_index + i + j])
+
+        # ----------
+        # |  |  |**|
+        # |  |**|  |
+        # |**|  |  |
+        # ----------
+        if current_pixel_row + i + j != current_pixel_row and height + (current_pixel_index + i - j) - 1 != current_pixel_index:
+            surrounding_pixels.append(img[current_pixel_row + i + j][height + (current_pixel_index + i - j) - 1])
+
+    for j in range(1, height - 1):
+        # ----------
+        # |  |  |  |
+        # |**|  |  |
+        # |  |  |  |
+        # ----------
+        surrounding_pixels.append(img[current_pixel_row + i + j][current_pixel_index + i])
+
+        # ----------
+        # |  |  |  |
+        # |  |  |**|
+        # |  |  |  |
+        # ----------
+        surrounding_pixels.append(img[current_pixel_row + i + j][current_pixel_index - i])
+
+    for j in range(1, height - 1):
+        # ----------
+        # |  |**|  |
+        # |  |  |  |
+        # |  |  |  |
+        # ----------
+        surrounding_pixels.append(img[current_pixel_row + i][current_pixel_index + i + j])
+
+        # ----------
+        # |  |  |  |
+        # |  |  |  |
+        # |  |**|  |
+        # ----------
+        surrounding_pixels.append(img[current_pixel_row - i][current_pixel_index + i + j])
+
+    for j in range(1, height-1):
+        # ----------------
+        # |  |  |  |  |  |
+        # |  |  |  |  |  |
+        # |  |**|  |**|  |
+        # |  |  |  |  |  |
+        # |  |  |  |  |  |
+        # ----------------
+        if current_pixel_index + i + j != current_pixel_index:
+            surrounding_pixels.append(img[current_pixel_row][current_pixel_index + i + j])
+
+        # ----------------
+        # |  |  |  |  |  |
+        # |  |  |**|  |  |
+        # |  |  |  |  |  |
+        # |  |  |**|  |  |
+        # |  |  |  |  |  |
+        # ----------------
+        if current_pixel_row + i + j != current_pixel_row:
+            surrounding_pixels.append(img[current_pixel_row + i + j][current_pixel_index])
+
+    # appending the current center pixel to the array
+    surrounding_pixels.append(img[current_pixel_row][current_pixel_index])
+
+    return surrounding_pixels
+
+
 for row in range(len(img)):
     for pixel in range(len(img[row])):
-        ### the graph
-        # upper_left = img[row-1][pixel-1]
-        # upper = img[row-1][pixel]
-        # upper_right = img[row-1][pixel+1]
-        # right = img[row][pixel+1]
-        # lower_right = img[row+1][pixel+1]
-        # lower = img[row+1][pixel]
-        # lower_left = img[row+1][pixel-1]
-        # left = img[row][pixel-1]
-
-        # surrounding_pixels = [upper_left if  row > 0 and pixel > 0 else None,
-        #                       upper if row > 0 else None,
-        #                       upper_right if row > 0 and pixel < len(img[row]) - 1 else None,
-        #                       right if pixel < len(img[row]) - 1,
-        #                       lower_right if pixel < len(img[row]) and row < len(img) - 1,
-        #                       lower if row < len(img) - 1,
-        #                       lower_left if row < len(img) - 1 and pixel > 0,
-        #                       left if pixel > 0
-        #                     ]
-
-        surrounding_pixels = [img[row-1][pixel-1] if  row > 0 and pixel > 0 else None,
-                              img[row-1][pixel] if row > 0 else None,
-                              img[row-1][pixel+1] if row > 0 and pixel < len(img[row]) - 1 else None,
-                              img[row][pixel+1] if pixel < len(img[row]) - 1 else None,
-                              img[row+1][pixel+1] if pixel < len(img[row]) - 1 and row < len(img) - 1 else None,
-                              img[row+1][pixel] if row < len(img) - 1 else None,
-                              img[row+1][pixel-1] if row < len(img) - 1 and pixel > 0 else None,
-                              img[row][pixel-1] if pixel > 0 else None
-                            ]
-
-        none_count = len([ n for n in surrounding_pixels if n is None ])
-        # the added one pixel is for the current pixel itself
-        pixels_count = len(surrounding_pixels) + 1 - none_count
-        
-        red_sum = sum([ p[0] for p in surrounding_pixels + [img[row][pixel]] if p is not None ])
-        green_sum = sum([ p[1] for p in surrounding_pixels + [img[row][pixel]] if p is not None ])
-        blue_sum = sum([ p[2] for p in surrounding_pixels + [img[row][pixel]] if p is not None ])
-
-        red_avg = red_sum / pixels_count
-        green_avg = green_sum / pixels_count
-        blue_avg = blue_sum / pixels_count
-
-        new_img[row][pixel][0] = red_avg
-        new_img[row][pixel][1] = green_avg
-        new_img[row][pixel][2] = blue_avg
-
-        
-
+        # the 11 is the number of the pixels that the surrounding square consists of (11*11)
+        # and that square is the one which will determine this pixel color, and by the increase
+        # of this number the blur effect will increase too
+        surrounding_pixels = get_surrounding_pixels(img, 11, row, pixel)
+        if surrounding_pixels:
+            pixels_count = len(surrounding_pixels)
             
+            red_sum = sum([ p[0] for p in surrounding_pixels ])
+            green_sum = sum([ p[1] for p in surrounding_pixels ])
+            blue_sum = sum([ p[2] for p in surrounding_pixels ])
+
+            red_avg = red_sum / pixels_count
+            green_avg = green_sum / pixels_count
+            blue_avg = blue_sum / pixels_count
+
+            new_img[row][pixel][0] = red_avg
+            new_img[row][pixel][1] = green_avg
+            new_img[row][pixel][2] = blue_avg
+
 
 cv2.imwrite('blur.jpeg', new_img)
