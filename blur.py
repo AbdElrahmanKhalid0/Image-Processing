@@ -9,86 +9,20 @@ new_img = np.copy(img)
 def get_surrounding_pixels(img, height, current_pixel_row, current_pixel_index):
     """returns the surrounding pixels of a certain pixel, including the pixel itself"""
 
-    height_half = int(height/2)
+    # checking that the height is odd value
+    if height % 2 == 0:
+        raise ValueError("height should be odd number represents the height of the box surrounding the pixel")
 
-    if current_pixel_row < height_half or current_pixel_index < height_half or current_pixel_index + height_half >= len(img[0]) or current_pixel_row + height_half >= len(img):
-        return None
-
-    # print(f'row: {current_pixel_row}, pixel: {current_pixel_index} => can be handeled')
+    start = -int(height/2)
     surrounding_pixels = []
-    i = -height_half
-    for j in range(height):
-        # ----------
-        # |**|  |  |
-        # |  |**|  |
-        # |  |  |**|
-        # ----------
-        if current_pixel_row + i + j != current_pixel_row and current_pixel_index + i + j != current_pixel_index:
-            # checking that the current pixel is not the center pixel
-            surrounding_pixels.append(img[current_pixel_row + i + j][current_pixel_index + i + j])
 
-        # ----------
-        # |  |  |**|
-        # |  |**|  |
-        # |**|  |  |
-        # ----------
-        if current_pixel_row + i + j != current_pixel_row and height + (current_pixel_index + i - j) - 1 != current_pixel_index:
-            surrounding_pixels.append(img[current_pixel_row + i + j][height + (current_pixel_index + i - j) - 1])
+    for i in range(start, -start + 1):
+        for j in range(start, -start + 1):
+            if current_pixel_row + i < 0 or current_pixel_row + i >= len(img) or current_pixel_index + j < 0 or current_pixel_index + j >= len(img[i]):
+                continue
 
-    for j in range(1, height - 1):
-        # ----------
-        # |  |  |  |
-        # |**|  |  |
-        # |  |  |  |
-        # ----------
-        surrounding_pixels.append(img[current_pixel_row + i + j][current_pixel_index + i])
-
-        # ----------
-        # |  |  |  |
-        # |  |  |**|
-        # |  |  |  |
-        # ----------
-        surrounding_pixels.append(img[current_pixel_row + i + j][current_pixel_index - i])
-
-    for j in range(1, height - 1):
-        # ----------
-        # |  |**|  |
-        # |  |  |  |
-        # |  |  |  |
-        # ----------
-        surrounding_pixels.append(img[current_pixel_row + i][current_pixel_index + i + j])
-
-        # ----------
-        # |  |  |  |
-        # |  |  |  |
-        # |  |**|  |
-        # ----------
-        surrounding_pixels.append(img[current_pixel_row - i][current_pixel_index + i + j])
-
-    for j in range(1, height-1):
-        # ----------------
-        # |  |  |  |  |  |
-        # |  |  |  |  |  |
-        # |  |**|  |**|  |
-        # |  |  |  |  |  |
-        # |  |  |  |  |  |
-        # ----------------
-        if current_pixel_index + i + j != current_pixel_index:
-            surrounding_pixels.append(img[current_pixel_row][current_pixel_index + i + j])
-
-        # ----------------
-        # |  |  |  |  |  |
-        # |  |  |**|  |  |
-        # |  |  |  |  |  |
-        # |  |  |**|  |  |
-        # |  |  |  |  |  |
-        # ----------------
-        if current_pixel_row + i + j != current_pixel_row:
-            surrounding_pixels.append(img[current_pixel_row + i + j][current_pixel_index])
-
-    # appending the current center pixel to the array
-    surrounding_pixels.append(img[current_pixel_row][current_pixel_index])
-
+            surrounding_pixels.append(img[current_pixel_row + i][current_pixel_index + j])
+                
     return surrounding_pixels
 
 
